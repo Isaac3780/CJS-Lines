@@ -541,28 +541,27 @@
       labels.push(label);
     });
 
-    // ---- "SINGAPORE" text ring around the equator (Universal Studios style) ----
-    const ringText = 'SINGAPORE';
-    const ringR = 1.5;
+    // ---- "SINGAPORE . SINGAPORE ." repeating, filling the whole globe ----
+    const ringText = 'SINGAPORE · SINGAPORE · ';
+    const ringR = 1.4;
     const n = ringText.length;
-    const arcSpan = Math.PI * 1.1; // ~198 degrees across the front
     ringText.split('').forEach((ch, i) => {
       const cv = document.createElement('canvas');
       cv.width = 512; cv.height = 512;
       const cx = cv.getContext('2d');
       cx.clearRect(0, 0, 512, 512);
-      cx.font = '900 340px Arial Black, sans-serif';
+      cx.font = '900 300px Arial Black, sans-serif';
       cx.textAlign = 'center';
       cx.textBaseline = 'middle';
       cx.shadowColor = 'rgba(255,43,214,1)';
       cx.shadowBlur = 36;
       cx.fillStyle = '#ff2bd6';
-      cx.fillText(ch, 256, 256);
+      if (ch !== ' ') cx.fillText(ch, 256, 256);
       const tex = new THREE.CanvasTexture(cv);
       tex.needsUpdate = true;
       const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, depthTest: true });
-      const plane = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), mat);
-      const ang = -arcSpan / 2 + (i / (n - 1)) * arcSpan;
+      const plane = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 0.4), mat);
+      const ang = (i / n) * Math.PI * 2;
       const x = ringR * Math.sin(ang);
       const z = ringR * Math.cos(ang);
       plane.position.set(x, 0, z);
@@ -620,7 +619,7 @@
     }
 
     // interaction state
-    let targetRotY = 0, targetRotX = -0.18, autoRotate = true, dragging = false;
+    let targetRotY = 0, targetRotX = -0.18, autoRotate = false, dragging = false;
     let startX = 0, startY = 0, startRotY = 0, startRotX = 0, moved = false;
     let resumeTimer = null;
     let hovered = -1;
@@ -767,6 +766,7 @@
       clearInterval(loadTimer);
       loadPct.textContent = '100%';
       globeLoader.classList.add('hide');
+      autoRotate = true;
     }, 2400);
     animate();
   }
