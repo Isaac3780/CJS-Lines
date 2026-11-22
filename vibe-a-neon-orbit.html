@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CJSLINES — Neon Orbit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #05060f;
+    --bg-2: #0a0d1f;
+    --cyan: #00f0ff;
+    --magenta: #ff2bd6;
+    --violet: #7b2bff;
+    --text: #e8f4ff;
+    --muted: #7d8aa8;
+    --card-w: 320px;
+    --card-h: 440px;
+    --radius: 430px;
+    --angle: 72deg;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', system-ui, sans-serif;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ambient background */
+  .bg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(60% 50% at 20% 10%, rgba(0,240,255,.16), transparent 60%),
+      radial-gradient(55% 45% at 85% 20%, rgba(255,43,214,.14), transparent 60%),
+      radial-gradient(70% 60% at 50% 100%, rgba(123,43,255,.18), transparent 65%),
+      var(--bg);
+  }
+  .grid-floor {
+    position: fixed; left: -50%; right: -50%; bottom: -6%; height: 62%; z-index: 0;
+    background-image:
+      linear-gradient(rgba(0,240,255,.22) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,240,255,.22) 1px, transparent 1px);
+    background-size: 46px 46px;
+    transform: perspective(620px) rotateX(72deg);
+    transform-origin: center top;
+    mask-image: linear-gradient(to bottom, transparent, #000 32%, #000 78%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 32%, #000 78%, transparent);
+    animation: gridmove 14s linear infinite;
+    opacity: .7;
+  }
+  @keyframes gridmove { from { background-position: 0 0, 0 0; } to { background-position: 0 46px, 0 0; } }
+  .scanlines {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .35;
+    background: repeating-linear-gradient(to bottom, rgba(255,255,255,.035) 0 1px, transparent 1px 3px);
+    mix-blend-mode: overlay;
+  }
+  .stars { position: fixed; inset: 0; z-index: 0; }
+  .stars span {
+    position: absolute; width: 2px; height: 2px; border-radius: 50%;
+    background: #cfe9ff; opacity: .5; animation: twinkle 4s ease-in-out infinite;
+  }
+  @keyframes twinkle { 0%,100% { opacity: .15; } 50% { opacity: .9; } }
+
+  .wrap { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 34px 24px 80px; }
+
+  /* header */
+  header { display: flex; align-items: center; justify-content: space-between; }
+  .logo { display: flex; align-items: center; gap: 14px; }
+  .logo-mark {
+    width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center;
+    font-family: 'Orbitron'; font-weight: 900; font-size: 20px; color: #04121a;
+    background: linear-gradient(135deg, var(--cyan), var(--violet));
+    box-shadow: 0 0 22px rgba(0,240,255,.55);
+  }
+  .logo-text { font-family: 'Orbitron'; font-weight: 700; letter-spacing: .32em; font-size: 17px; }
+  .logo-text small { display: block; font-family: 'Rajdhani'; font-weight: 500; letter-spacing: .42em; font-size: 10px; color: var(--cyan); }
+  .status { display: flex; align-items: center; gap: 9px; font-size: 12px; letter-spacing: .22em; color: var(--muted); text-transform: uppercase; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #2bff9b; box-shadow: 0 0 12px #2bff9b; animation: pulse 1.8s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+
+  /* hero */
+  .hero { text-align: center; margin: 64px 0 10px; }
+  .eyebrow { font-family: 'Orbitron'; font-size: 12px; letter-spacing: .5em; color: var(--cyan); text-transform: uppercase; }
+  .hero h1 {
+    font-family: 'Orbitron'; font-weight: 900; font-size: clamp(38px, 7vw, 76px);
+    line-height: 1.02; margin: 18px 0 8px; letter-spacing: .02em;
+    background: linear-gradient(100deg, #fff 10%, var(--cyan) 45%, var(--magenta) 90%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    filter: drop-shadow(0 0 26px rgba(0,240,255,.28));
+  }
+  .hero p { max-width: 620px; margin: 0 auto; color: var(--muted); font-size: 18px; letter-spacing: .04em; }
+  .hint { margin-top: 16px; font-family: 'Orbitron'; font-size: 11px; letter-spacing: .34em; color: var(--muted); text-transform: uppercase; }
+  .hint b { color: var(--cyan); font-weight: 700; }
+
+  /* wheel */
+  .stage { position: relative; height: 620px; margin-top: 18px; perspective: 1600px; }
+  .wheel {
+    position: absolute; inset: 0; transform-style: preserve-3d;
+    transition: transform .85s cubic-bezier(.22,.9,.28,1);
+  }
+  .card {
+    position: absolute; top: 50%; left: 50%;
+    width: var(--card-w); height: var(--card-h);
+    margin: calc(var(--card-h) / -2) 0 0 calc(var(--card-w) / -2);
+    transform: rotateY(var(--a)) translateZ(var(--radius));
+    transform-style: preserve-3d;
+    border-radius: 22px;
+    background: linear-gradient(160deg, rgba(18,24,46,.92), rgba(8,11,24,.96));
+    border: 1px solid rgba(0,240,255,.28);
+    box-shadow: 0 24px 60px rgba(0,0,0,.6), inset 0 0 40px rgba(0,240,255,.05);
+    padding: 26px; display: flex; flex-direction: column; overflow: hidden;
+    backface-visibility: hidden;
+    transition: opacity .5s ease, filter .5s ease, border-color .5s ease;
+  }
+  .card::before {
+    content: ''; position: absolute; inset: 0; border-radius: 22px; padding: 1px;
+    background: linear-gradient(140deg, rgba(0,240,255,.9), transparent 40%, transparent 60%, rgba(255,43,214,.8));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; opacity: .55; pointer-events: none;
+  }
+  .card.active { border-color: var(--cyan); box-shadow: 0 0 0 1px rgba(0,240,255,.5), 0 0 60px rgba(0,240,255,.28), 0 24px 70px rgba(0,0,0,.7); }
+  .card .num { font-family: 'Orbitron'; font-size: 13px; letter-spacing: .4em; color: var(--cyan); }
+  .card .icon {
+    width: 68px; height: 68px; border-radius: 18px; margin: 22px 0; display: grid; place-items: center;
+    font-size: 34px; background: linear-gradient(140deg, rgba(0,240,255,.16), rgba(255,43,214,.14));
+    border: 1px solid rgba(0,240,255,.35);
+    box-shadow: 0 0 26px rgba(0,240,255,.22);
+  }
+  .card h3 { font-family: 'Orbitron'; font-weight: 700; font-size: 21px; letter-spacing: .03em; margin-bottom: 10px; }
+  .card .tag { font-size: 11px; letter-spacing: .28em; text-transform: uppercase; color: var(--magenta); margin-bottom: 16px; }
+  .card p { font-size: 15px; line-height: 1.55; color: var(--muted); flex: 1; }
+  .card .meta { display: flex; flex-wrap: wrap; gap: 7px; margin: 14px 0 18px; }
+  .chip { font-size: 11px; letter-spacing: .08em; padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(0,240,255,.3); color: #bfeaff; }
+  .visit {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 13px 18px; border-radius: 12px; text-decoration: none;
+    font-family: 'Orbitron'; font-size: 13px; letter-spacing: .18em; color: #04121a; font-weight: 700;
+    background: linear-gradient(100deg, var(--cyan), var(--violet));
+    box-shadow: 0 0 26px rgba(0,240,255,.4); transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .visit:hover { transform: translateY(-2px); box-shadow: 0 0 40px rgba(0,240,255,.6); }
+  .visit.ghost { background: transparent; color: var(--cyan); border: 1px solid rgba(0,240,255,.5); box-shadow: none; }
+
+  /* controls */
+  .controls { display: flex; align-items: center; justify-content: center; gap: 26px; margin-top: 26px; }
+  .nav-btn {
+    width: 58px; height: 58px; border-radius: 50%; cursor: pointer;
+    background: rgba(0,240,255,.06); border: 1px solid rgba(0,240,255,.4); color: var(--cyan);
+    font-size: 20px; display: grid; place-items: center; transition: all .2s ease;
+    box-shadow: 0 0 20px rgba(0,240,255,.15);
+  }
+  .nav-btn:hover { background: rgba(0,240,255,.16); box-shadow: 0 0 34px rgba(0,240,255,.4); transform: scale(1.06); }
+  .dots { display: flex; gap: 12px; }
+  .dots button {
+    width: 11px; height: 11px; border-radius: 50%; border: none; cursor: pointer;
+    background: rgba(0,240,255,.25); transition: all .3s ease;
+  }
+  .dots button.on { background: var(--cyan); box-shadow: 0 0 14px var(--cyan); transform: scale(1.3); }
+  .counter { font-family: 'Orbitron'; font-size: 13px; letter-spacing: .3em; color: var(--muted); min-width: 74px; text-align: center; }
+
+  footer { margin-top: 70px; text-align: center; color: var(--muted); font-size: 13px; letter-spacing: .18em; }
+  footer .line { height: 1px; width: 220px; margin: 0 auto 22px; background: linear-gradient(90deg, transparent, var(--cyan), transparent); }
+
+  /* word + contact */
+  .word { margin-top: 74px; }
+  .word-inner {
+    position: relative; overflow: hidden; border-radius: 24px; padding: 46px 44px;
+    background: linear-gradient(150deg, rgba(18,24,46,.85), rgba(8,11,24,.92));
+    border: 1px solid rgba(0,240,255,.28); box-shadow: 0 24px 60px rgba(0,0,0,.5);
+  }
+  .word-inner::before {
+    content: ''; position: absolute; inset: 0; border-radius: 24px; padding: 1px;
+    background: linear-gradient(140deg, rgba(0,240,255,.9), transparent 45%, transparent 60%, rgba(255,43,214,.8));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude; opacity: .5; pointer-events: none;
+  }
+  .word-eyebrow { font-family: 'Orbitron'; font-size: 11px; letter-spacing: .5em; color: var(--cyan); text-transform: uppercase; }
+  .word h2 { font-family: 'Orbitron'; font-weight: 800; font-size: clamp(24px, 3.4vw, 34px); line-height: 1.15; margin: 16px 0 16px; }
+  .word p { color: var(--muted); font-size: 16px; line-height: 1.7; max-width: 640px; }
+  .word-btn {
+    display: inline-flex; align-items: center; gap: 10px; margin-top: 26px; padding: 14px 24px;
+    border-radius: 12px; text-decoration: none; font-family: 'Orbitron'; font-size: 13px;
+    letter-spacing: .16em; font-weight: 700; color: #04121a;
+    background: linear-gradient(100deg, var(--cyan), var(--violet));
+    box-shadow: 0 0 26px rgba(0,240,255,.4); transition: box-shadow .2s ease;
+  }
+  .word-btn:hover { box-shadow: 0 0 40px rgba(0,240,255,.6); }
+  .word-badge { position: absolute; right: 34px; top: 50%; transform: translateY(-50%); font-family: 'Orbitron'; font-size: 120px; color: rgba(0,240,255,.08); }
+
+  .contact { margin-top: 40px; }
+  .contact-inner {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 44px; border-radius: 24px;
+    background: linear-gradient(150deg, rgba(18,24,46,.85), rgba(8,11,24,.92));
+    border: 1px solid rgba(0,240,255,.28);
+  }
+  .contact h2 { font-family: 'Orbitron'; font-weight: 800; font-size: clamp(24px, 3.4vw, 34px); margin: 16px 0 12px; }
+  .contact-copy p { color: var(--muted); font-size: 15px; line-height: 1.7; }
+  .contact-links { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+  .contact-links a { color: var(--cyan); text-decoration: none; font-size: 15px; }
+  .contact-links a:hover { text-shadow: 0 0 14px rgba(0,240,255,.6); }
+  .contact-form { display: flex; flex-direction: column; gap: 12px; }
+  .contact-form input, .contact-form textarea {
+    width: 100%; padding: 14px 16px; border-radius: 12px; font-size: 15px; font-family: inherit;
+    background: rgba(0,240,255,.05); border: 1px solid rgba(0,240,255,.3); color: var(--text);
+    outline: none; transition: .25s;
+  }
+  .contact-form textarea { resize: vertical; min-height: 110px; }
+  .contact-form input::placeholder, .contact-form textarea::placeholder { color: var(--muted); }
+  .contact-form input:focus, .contact-form textarea:focus { border-color: var(--cyan); box-shadow: 0 0 20px rgba(0,240,255,.25); }
+  .contact-form button {
+    align-self: flex-start; padding: 14px 26px; border: none; border-radius: 12px; cursor: pointer;
+    font-family: 'Orbitron'; font-size: 13px; letter-spacing: .16em; font-weight: 700; color: #04121a;
+    background: linear-gradient(100deg, var(--cyan), var(--violet));
+  }
+
+  @media (max-width: 760px) {
+    :root { --card-w: 260px; --card-h: 420px; --radius: 330px; }
+    .word-inner, .contact-inner { padding: 30px 24px; }
+    .contact-inner { grid-template-columns: 1fr; }
+    .word-badge { display: none; }
+    .stage { height: 560px; }
+    .hero { margin-top: 40px; }
+    .status { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="grid-floor"></div>
+  <div class="stars" id="stars"></div>
+  <div class="scanlines"></div>
+
+  <div class="wrap">
+    <header>
+      <div class="logo">
+        <div class="logo-mark">C</div>
+        <div class="logo-text">CJSLINES<small>DIGITAL GROUP</small></div>
+      </div>
+      <div class="status"><span class="dot"></span> All systems online</div>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">// One Hub · Five Ventures</div>
+      <h1>THE CJSLINES<br />NETWORK</h1>
+      <p>Five connected services under one roof. Spin the wheel to explore each venture before you dive in.</p>
+      <div class="hint"><b>Drag</b> or <b>Scroll</b> to rotate · Click a card to visit</div>
+    </section>
+
+    <div class="stage">
+      <div class="wheel" id="wheel"></div>
+    </div>
+
+    <div class="controls">
+      <button class="nav-btn" id="prev" aria-label="Previous">&#10094;</button>
+      <div class="dots" id="dots"></div>
+      <div class="counter" id="counter">01 / 05</div>
+      <button class="nav-btn" id="next" aria-label="Next">&#10095;</button>
+    </div>
+
+    <section class="word" id="word">
+      <div class="word-inner">
+        <div class="word-eyebrow">A Word To Ponder</div>
+        <h2>Brethren, Are We Truly Living Out Our Calling?</h2>
+        <p>A reflective call to examine whether our faith has become routine. We fill services and buildings, yet the lost outside remain unreached. God's heart is for the lost — like the shepherd who leaves the ninety-nine for the one. We are saved to serve, loved to love, and called to make disciples, not just attendees. May we step beyond the four walls to reach the hurting, forgotten, and lost.</p>
+        <a class="word-btn" href="message.html?vibe=a">Read the Full Message →</a>
+        <div class="word-badge">✝</div>
+      </div>
+    </section>
+
+    <section class="contact" id="contact">
+      <div class="contact-inner">
+        <div class="contact-copy">
+          <div class="word-eyebrow">Get In Touch</div>
+          <h2>Contact Us</h2>
+          <p>Questions, prayer requests, or a partnership idea — we'd love to hear from you.</p>
+          <div class="contact-links">
+            <a href="mailto:hello@cjslines.com">hello@cjslines.com</a>
+            <a href="https://wa.me/6582683372">WhatsApp · +65 8268 3372</a>
+          </div>
+        </div>
+        <form class="contact-form" action="mailto:hello@cjslines.com" method="post" enctype="text/plain">
+          <input type="text" name="name" placeholder="Your name" required />
+          <input type="email" name="email" placeholder="Your email" required />
+          <textarea name="message" placeholder="How can we help?" required></textarea>
+          <button type="submit">Send Message →</button>
+        </form>
+      </div>
+    </section>
+
+    <footer>
+      <div class="line"></div>
+      CJSLINES · Logistics · Infrastructure · Education · Charity
+    </footer>
+  </div>
+
+<script>
+  const data = [
+    {
+      icon: '🚚', title: 'Logistics & Transport', tag: 'Forwarding · Local Transport',
+      desc: 'Parcel forwarding and local transport solutions. Move goods across borders and around the city with reliable, trackable service.',
+      chips: ['Parcel Forwarding', 'Local Delivery', 'Cross-border'],
+      url: '#'
+    },
+    {
+      icon: '🌐', title: 'Web Infrastructure & Hosting', tag: 'Domains · Hosting · Web Setup',
+      desc: 'Domain registration, business web hosting and complete new-website setup packages — from name to live site.',
+      chips: ['Domains', 'Hosting', 'Website Setup'],
+      url: 'https://oryon.net/'
+    },
+    {
+      icon: '🎓', title: 'Academy & Café Traineeship', tag: 'Livelihood School · Internship',
+      desc: 'A livelihood school and training café. Trainees run a real café while studying English, maths and entrepreneurship — earn while you learn.',
+      chips: ['Traineeship', 'Café Ops', 'Livelihood'],
+      url: 'https://isaac3780.github.io/Ministry-Cafe/index.html'
+    },
+    {
+      icon: '❤️', title: 'Charity Marketplace', tag: 'Secondhand · For a Cause',
+      desc: 'Secondhand online selling where proceeds support charitable work. Every purchase helps fund outreach and community missions.',
+      chips: ['Secondhand', 'Fundraising', 'Community'],
+      url: 'https://isaac3780.github.io/echofromabove/charity-site/index.html'
+    },
+    {
+      icon: '✦', title: 'Explore More', tag: 'Others · Coming Soon',
+      desc: 'More ventures are on the way. Check back soon, or reach out to see how CJSLINES can work with you.',
+      chips: ['Coming Soon', 'Partnerships'],
+      url: '#'
+    }
+  ];
+
+  const wheel = document.getElementById('wheel');
+  const dots = document.getElementById('dots');
+  const counter = document.getElementById('counter');
+  const n = data.length;
+  const angle = 360 / n;
+  let index = 0;
+
+  data.forEach((d, i) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.setProperty('--a', (i * angle) + 'deg');
+    card.innerHTML = `
+      <div class="num">0${i + 1} / 0${n}</div>
+      <div class="icon">${d.icon}</div>
+      <h3>${d.title}</h3>
+      <div class="tag">${d.tag}</div>
+      <p>${d.desc}</p>
+      <div class="meta">${d.chips.map(c => `<span class="chip">${c}</span>`).join('')}</div>
+      <a class="visit ${d.url === '#' ? 'ghost' : ''}" href="${d.url}" target="_blank" rel="noopener">${d.url === '#' ? 'Coming Soon' : 'Visit Site →'}</a>
+    `;
+    wheel.appendChild(card);
+
+    const dot = document.createElement('button');
+    dot.setAttribute('aria-label', 'Go to ' + d.title);
+    dot.addEventListener('click', () => go(i));
+    dots.appendChild(dot);
+  });
+
+  const cards = [...wheel.children];
+  const dotBtns = [...dots.children];
+
+  function render() {
+    const radius = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--radius')) || 430;
+    wheel.style.transform = `translateZ(-${radius}px) rotateY(${-index * angle}deg)`;
+    // normalize rotation for shading
+    cards.forEach((c, i) => {
+      let a = (i - index) * angle;
+      a = ((a % 360) + 360) % 360;
+      if (a > 180) a -= 360;
+      const abs = Math.abs(a);
+      const opacity = Math.max(0.18, 1 - abs / 160);
+      const blur = abs > 90 ? Math.min(3, (abs - 90) / 30) : 0;
+      const active = abs < 36;
+      c.classList.toggle('active', active);
+      c.style.opacity = active ? 1 : opacity;
+      c.style.filter = blur ? `blur(${blur}px)` : 'none';
+      c.style.pointerEvents = active ? 'auto' : 'none';
+    });
+    dotBtns.forEach((d, i) => d.classList.toggle('on', i === index));
+    counter.textContent = `0${index + 1} / 0${n}`;
+  }
+
+  function go(i) {
+    index = (i + n) % n;
+    render();
+  }
+
+  document.getElementById('prev').addEventListener('click', () => go(index - 1));
+  document.getElementById('next').addEventListener('click', () => go(index + 1));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft') go(index - 1);
+    if (e.key === 'ArrowRight') go(index + 1);
+  });
+
+  // drag / swipe
+  let startX = 0, dragging = false, moved = false;
+  const stage = document.querySelector('.stage');
+  function onStart(x) { startX = x; dragging = true; moved = false; }
+  function onMove(x) {
+    if (!dragging) return;
+    if (Math.abs(x - startX) > 8) moved = true;
+  }
+  function onEnd(x) {
+    if (!dragging) return;
+    const dx = x - startX;
+    if (Math.abs(dx) > 45) go(index + (dx < 0 ? 1 : -1));
+    dragging = false;
+  }
+  stage.addEventListener('mousedown', e => { e.preventDefault(); onStart(e.clientX); });
+  window.addEventListener('mousemove', e => onMove(e.clientX));
+  window.addEventListener('mouseup', e => onEnd(e.clientX));
+  stage.addEventListener('touchstart', e => onStart(e.touches[0].clientX), { passive: true });
+  stage.addEventListener('touchmove', e => onMove(e.touches[0].clientX), { passive: true });
+  stage.addEventListener('touchend', e => onEnd(e.changedTouches[0].clientX));
+
+  // wheel scroll
+  let wheelLock = false;
+  stage.addEventListener('wheel', e => {
+    e.preventDefault();
+    if (wheelLock) return;
+    wheelLock = true;
+    go(index + (e.deltaY > 0 ? 1 : -1));
+    setTimeout(() => wheelLock = false, 500);
+  }, { passive: false });
+
+  // stars
+  const stars = document.getElementById('stars');
+  for (let i = 0; i < 70; i++) {
+    const s = document.createElement('span');
+    s.style.left = Math.random() * 100 + '%';
+    s.style.top = Math.random() * 70 + '%';
+    s.style.animationDelay = Math.random() * 4 + 's';
+    stars.appendChild(s);
+  }
+
+  render();
+</script>
+</body>
+</html>

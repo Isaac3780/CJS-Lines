@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CJSLINES — Aurora Pulse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f2f6ff;
+    --ink: #0b1020;
+    --muted: #5b6478;
+    --blue: #2f6bff;
+    --pink: #ff3d8b;
+    --lime: #a8e62b;
+    --yellow: #ffcf3d;
+    --violet: #7b5cff;
+    --card-w: 330px;
+    --card-h: 450px;
+    --radius: 450px;
+    --angle: 72deg;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Outfit', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  .bg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(45% 40% at 12% 12%, rgba(168,230,43,.35), transparent 60%),
+      radial-gradient(50% 45% at 88% 18%, rgba(255,61,139,.28), transparent 60%),
+      radial-gradient(60% 50% at 50% 105%, rgba(47,107,255,.25), transparent 65%),
+      linear-gradient(180deg, #ffffff 0%, var(--bg) 55%, #eef3ff 100%);
+  }
+  .blobs { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  .blob { position: absolute; border-radius: 50%; filter: blur(60px); opacity: .5; animation: float 18s ease-in-out infinite; }
+  .blob.b1 { width: 420px; height: 420px; background: var(--lime); top: -120px; left: -100px; }
+  .blob.b2 { width: 380px; height: 380px; background: var(--pink); top: 10%; right: -120px; animation-delay: -6s; }
+  .blob.b3 { width: 460px; height: 460px; background: var(--blue); bottom: -160px; left: 30%; animation-delay: -11s; }
+  @keyframes float { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(40px,-30px) scale(1.08); } }
+
+  .wrap { position: relative; z-index: 2; max-width: 1200px; margin: 0 auto; padding: 34px 24px 80px; }
+
+  header { display: flex; align-items: center; justify-content: space-between; }
+  .logo { display: flex; align-items: center; gap: 14px; }
+  .logo-mark {
+    width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center;
+    font-weight: 900; font-size: 22px; color: #fff;
+    background: linear-gradient(135deg, var(--blue), var(--pink));
+    box-shadow: 0 12px 26px rgba(47,107,255,.35);
+  }
+  .logo-text { font-weight: 800; letter-spacing: .22em; font-size: 18px; }
+  .logo-text small { display: block; font-weight: 600; letter-spacing: .34em; font-size: 10px; color: var(--blue); }
+  .pill { background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 12px; letter-spacing: .16em; text-transform: uppercase; font-weight: 600; }
+
+  .hero { text-align: center; margin: 60px 0 8px; }
+  .eyebrow {
+    display: inline-block; font-weight: 700; font-size: 12px; letter-spacing: .34em; text-transform: uppercase;
+    color: var(--ink); background: var(--yellow); padding: 8px 18px; border-radius: 999px;
+    box-shadow: 0 8px 20px rgba(255,207,61,.4);
+  }
+  .hero h1 { font-weight: 900; font-size: clamp(44px, 8vw, 86px); line-height: .96; margin: 22px 0 14px; letter-spacing: -.03em; }
+  .hero h1 span {
+    background: linear-gradient(100deg, var(--blue), var(--pink) 55%, var(--violet));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero p { max-width: 600px; margin: 0 auto; color: var(--muted); font-size: 18px; font-weight: 500; }
+  .hint { margin-top: 16px; font-weight: 700; font-size: 12px; letter-spacing: .24em; color: var(--muted); text-transform: uppercase; }
+  .hint b { color: var(--pink); }
+
+  .stage { position: relative; height: 640px; margin-top: 14px; perspective: 1700px; }
+  .wheel { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .8s cubic-bezier(.22,.9,.28,1); }
+  .card {
+    position: absolute; top: 50%; left: 50%;
+    width: var(--card-w); height: var(--card-h);
+    margin: calc(var(--card-h) / -2) 0 0 calc(var(--card-w) / -2);
+    transform: rotateY(var(--a)) translateZ(var(--radius));
+    border-radius: 28px; padding: 28px; display: flex; flex-direction: column;
+    background: #fff; border: 1px solid #e6ebf5;
+    box-shadow: 0 30px 70px rgba(20,30,70,.16);
+    backface-visibility: hidden; overflow: hidden;
+    transition: opacity .5s ease, filter .5s ease, transform .5s ease;
+  }
+  .card::after {
+    content: ''; position: absolute; left: 0; right: 0; top: 0; height: 8px;
+    background: linear-gradient(90deg, var(--blue), var(--pink), var(--yellow));
+  }
+  .card.active { box-shadow: 0 40px 90px rgba(20,30,70,.28), 0 0 0 4px rgba(47,107,255,.12); }
+  .num { font-weight: 800; font-size: 13px; letter-spacing: .34em; color: var(--blue); }
+  .icon {
+    width: 72px; height: 72px; border-radius: 22px; margin: 24px 0; display: grid; place-items: center;
+    font-size: 36px; color: #fff;
+    background: linear-gradient(140deg, var(--blue), var(--violet));
+    box-shadow: 0 16px 30px rgba(47,107,255,.35);
+  }
+  .card h3 { font-weight: 800; font-size: 23px; letter-spacing: -.02em; margin-bottom: 8px; }
+  .tag { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--pink); font-weight: 700; margin-bottom: 16px; }
+  .card p { font-size: 15px; line-height: 1.6; color: var(--muted); flex: 1; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 20px; }
+  .chip { font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: 999px; background: #eef3ff; color: var(--blue); }
+  .visit {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 14px 20px; border-radius: 16px; text-decoration: none;
+    font-weight: 800; font-size: 14px; color: #fff;
+    background: linear-gradient(100deg, var(--blue), var(--pink));
+    box-shadow: 0 14px 30px rgba(255,61,139,.3); transition: transform .2s ease, box-shadow .2s ease;
+  }
+  .visit:hover { transform: translateY(-3px) scale(1.02); box-shadow: 0 20px 40px rgba(255,61,139,.4); }
+  .visit.ghost { background: #fff; color: var(--blue); border: 2px solid #dbe4f5; box-shadow: none; }
+
+  .controls { display: flex; align-items: center; justify-content: center; gap: 26px; margin-top: 26px; }
+  .nav-btn {
+    width: 60px; height: 60px; border-radius: 50%; cursor: pointer; border: none;
+    background: var(--ink); color: #fff; font-size: 20px; display: grid; place-items: center;
+    box-shadow: 0 14px 30px rgba(11,16,32,.28); transition: transform .2s ease;
+  }
+  .nav-btn:hover { transform: scale(1.08); }
+  .dots { display: flex; gap: 12px; }
+  .dots button { width: 12px; height: 12px; border-radius: 999px; border: none; cursor: pointer; background: #cdd8ec; transition: all .3s ease; }
+  .dots button.on { background: var(--pink); width: 30px; box-shadow: 0 0 14px rgba(255,61,139,.5); }
+  .counter { font-weight: 800; font-size: 14px; letter-spacing: .2em; color: var(--muted); min-width: 74px; text-align: center; }
+
+  footer { margin-top: 70px; text-align: center; color: var(--muted); font-weight: 600; font-size: 13px; letter-spacing: .14em; }
+  footer .line { height: 3px; width: 240px; margin: 0 auto 22px; border-radius: 999px; background: linear-gradient(90deg, var(--blue), var(--pink), var(--yellow)); }
+
+  /* word + contact */
+  .word { margin-top: 74px; }
+  .word-inner {
+    position: relative; overflow: hidden; border-radius: 30px; padding: 48px 44px;
+    background: #fff; border: 1px solid #e6ebf5; box-shadow: 0 30px 70px rgba(20,30,70,.14);
+  }
+  .word-inner::after { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 8px; background: linear-gradient(90deg, var(--blue), var(--pink), var(--yellow)); }
+  .word-eyebrow {
+    display: inline-block; font-weight: 700; font-size: 11px; letter-spacing: .3em; text-transform: uppercase;
+    color: var(--ink); background: var(--yellow); padding: 7px 16px; border-radius: 999px;
+  }
+  .word h2 { font-weight: 900; font-size: clamp(26px, 3.6vw, 36px); line-height: 1.08; margin: 20px 0 16px; letter-spacing: -.02em; }
+  .word p { color: var(--muted); font-size: 16px; line-height: 1.7; max-width: 620px; }
+  .word-btn {
+    display: inline-flex; align-items: center; gap: 10px; margin-top: 26px; padding: 15px 26px;
+    border-radius: 16px; text-decoration: none; font-weight: 800; font-size: 14px; color: #fff;
+    background: linear-gradient(100deg, var(--blue), var(--pink));
+    box-shadow: 0 14px 30px rgba(255,61,139,.3); transition: transform .2s ease;
+  }
+  .word-btn:hover { transform: translateY(-2px); }
+  .word-badge { position: absolute; right: 34px; top: 50%; transform: translateY(-50%); font-size: 110px; opacity: .08; }
+
+  .contact { margin-top: 40px; }
+  .contact-inner {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 44px; border-radius: 30px;
+    background: #fff; border: 1px solid #e6ebf5; box-shadow: 0 30px 70px rgba(20,30,70,.14);
+  }
+  .contact h2 { font-weight: 900; font-size: clamp(26px, 3.6vw, 36px); margin: 18px 0 12px; letter-spacing: -.02em; }
+  .contact-copy p { color: var(--muted); font-size: 15px; line-height: 1.7; }
+  .contact-links { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+  .contact-links a { color: var(--blue); text-decoration: none; font-weight: 600; font-size: 15px; }
+  .contact-form { display: flex; flex-direction: column; gap: 12px; }
+  .contact-form input, .contact-form textarea {
+    width: 100%; padding: 14px 16px; border-radius: 14px; font-size: 15px; font-family: inherit;
+    background: #f4f7ff; border: 1px solid #e2e8f6; color: var(--ink); outline: none; transition: .25s;
+  }
+  .contact-form textarea { resize: vertical; min-height: 110px; }
+  .contact-form input::placeholder, .contact-form textarea::placeholder { color: #9aa6bd; }
+  .contact-form input:focus, .contact-form textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(47,107,255,.12); }
+  .contact-form button {
+    align-self: flex-start; padding: 15px 26px; border: none; border-radius: 16px; cursor: pointer;
+    font-weight: 800; font-size: 14px; color: #fff; background: linear-gradient(100deg, var(--blue), var(--pink));
+  }
+
+  @media (max-width: 760px) {
+    :root { --card-w: 270px; --card-h: 430px; --radius: 350px; }
+    .word-inner, .contact-inner { padding: 30px 24px; }
+    .contact-inner { grid-template-columns: 1fr; }
+    .word-badge { display: none; }
+    .stage { height: 580px; }
+    .hero { margin-top: 40px; }
+    .pill { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="blobs"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+
+  <div class="wrap">
+    <header>
+      <div class="logo">
+        <div class="logo-mark">C</div>
+        <div class="logo-text">CJSLINES<small>DIGITAL GROUP</small></div>
+      </div>
+      <div class="pill">One Hub · Five Ventures</div>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">Welcome to the network</div>
+      <h1>Meet the <span>CJSLINES</span> family</h1>
+      <p>Five services, one group. Spin the wheel to preview each venture — then click through to visit it.</p>
+      <div class="hint"><b>Drag</b> or <b>Scroll</b> to rotate · Click a card to visit</div>
+    </section>
+
+    <div class="stage">
+      <div class="wheel" id="wheel"></div>
+    </div>
+
+    <div class="controls">
+      <button class="nav-btn" id="prev" aria-label="Previous">&#10094;</button>
+      <div class="dots" id="dots"></div>
+      <div class="counter" id="counter">01 / 05</div>
+      <button class="nav-btn" id="next" aria-label="Next">&#10095;</button>
+    </div>
+
+    <section class="word" id="word">
+      <div class="word-inner">
+        <div class="word-eyebrow">A Word To Ponder</div>
+        <h2>Brethren, Are We Truly Living Out Our Calling?</h2>
+        <p>A reflective call to examine whether our faith has become routine. We fill services and buildings, yet the lost outside remain unreached. God's heart is for the lost — like the shepherd who leaves the ninety-nine for the one. We are saved to serve, loved to love, and called to make disciples, not just attendees. May we step beyond the four walls to reach the hurting, forgotten, and lost.</p>
+        <a class="word-btn" href="message.html?vibe=b">Read the Full Message →</a>
+        <div class="word-badge">✝</div>
+      </div>
+    </section>
+
+    <section class="contact" id="contact">
+      <div class="contact-inner">
+        <div class="contact-copy">
+          <div class="word-eyebrow">Get In Touch</div>
+          <h2>Contact Us</h2>
+          <p>Questions, prayer requests, or a partnership idea — we'd love to hear from you.</p>
+          <div class="contact-links">
+            <a href="mailto:hello@cjslines.com">hello@cjslines.com</a>
+            <a href="https://wa.me/6582683372">WhatsApp · +65 8268 3372</a>
+          </div>
+        </div>
+        <form class="contact-form" action="mailto:hello@cjslines.com" method="post" enctype="text/plain">
+          <input type="text" name="name" placeholder="Your name" required />
+          <input type="email" name="email" placeholder="Your email" required />
+          <textarea name="message" placeholder="How can we help?" required></textarea>
+          <button type="submit">Send Message →</button>
+        </form>
+      </div>
+    </section>
+
+    <footer>
+      <div class="line"></div>
+      CJSLINES · Logistics · Infrastructure · Education · Charity
+    </footer>
+  </div>
+
+<script>
+  const data = [
+    { icon: '🚚', title: 'Logistics & Transport', tag: 'Forwarding · Local Transport',
+      desc: 'Parcel forwarding and local transport solutions. Move goods across borders and around the city with reliable, trackable service.',
+      chips: ['Parcel Forwarding', 'Local Delivery', 'Cross-border'], url: '#' },
+    { icon: '🌐', title: 'Web Infrastructure & Hosting', tag: 'Domains · Hosting · Web Setup',
+      desc: 'Domain registration, business web hosting and complete new-website setup packages — from name to live site.',
+      chips: ['Domains', 'Hosting', 'Website Setup'], url: 'https://oryon.net/' },
+    { icon: '🎓', title: 'Academy & Café Traineeship', tag: 'Livelihood School · Internship',
+      desc: 'A livelihood school and training café. Trainees run a real café while studying English, maths and entrepreneurship — earn while you learn.',
+      chips: ['Traineeship', 'Café Ops', 'Livelihood'], url: 'https://isaac3780.github.io/Ministry-Cafe/index.html' },
+    { icon: '❤️', title: 'Charity Marketplace', tag: 'Secondhand · For a Cause',
+      desc: 'Secondhand online selling where proceeds support charitable work. Every purchase helps fund outreach and community missions.',
+      chips: ['Secondhand', 'Fundraising', 'Community'], url: 'https://isaac3780.github.io/echofromabove/charity-site/index.html' },
+    { icon: '✦', title: 'Explore More', tag: 'Others · Coming Soon',
+      desc: 'More ventures are on the way. Check back soon, or reach out to see how CJSLINES can work with you.',
+      chips: ['Coming Soon', 'Partnerships'], url: '#' }
+  ];
+
+  const wheel = document.getElementById('wheel');
+  const dots = document.getElementById('dots');
+  const counter = document.getElementById('counter');
+  const n = data.length;
+  const angle = 360 / n;
+  let index = 0;
+
+  data.forEach((d, i) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.setProperty('--a', (i * angle) + 'deg');
+    card.innerHTML = `
+      <div class="num">0${i + 1} / 0${n}</div>
+      <div class="icon">${d.icon}</div>
+      <h3>${d.title}</h3>
+      <div class="tag">${d.tag}</div>
+      <p>${d.desc}</p>
+      <div class="meta">${d.chips.map(c => `<span class="chip">${c}</span>`).join('')}</div>
+      <a class="visit ${d.url === '#' ? 'ghost' : ''}" href="${d.url}" target="_blank" rel="noopener">${d.url === '#' ? 'Coming Soon' : 'Visit Site →'}</a>
+    `;
+    wheel.appendChild(card);
+    const dot = document.createElement('button');
+    dot.setAttribute('aria-label', 'Go to ' + d.title);
+    dot.addEventListener('click', () => go(i));
+    dots.appendChild(dot);
+  });
+
+  const cards = [...wheel.children];
+  const dotBtns = [...dots.children];
+
+  function render() {
+    const radius = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--radius')) || 450;
+    wheel.style.transform = `translateZ(-${radius}px) rotateY(${-index * angle}deg)`;
+    cards.forEach((c, i) => {
+      let a = (i - index) * angle;
+      a = ((a % 360) + 360) % 360;
+      if (a > 180) a -= 360;
+      const abs = Math.abs(a);
+      const opacity = Math.max(0.15, 1 - abs / 150);
+      const blur = abs > 90 ? Math.min(3, (abs - 90) / 30) : 0;
+      const active = abs < 36;
+      c.classList.toggle('active', active);
+      c.style.opacity = active ? 1 : opacity;
+      c.style.filter = blur ? `blur(${blur}px)` : 'none';
+      c.style.pointerEvents = active ? 'auto' : 'none';
+    });
+    dotBtns.forEach((d, i) => d.classList.toggle('on', i === index));
+    counter.textContent = `0${index + 1} / 0${n}`;
+  }
+
+  function go(i) { index = (i + n) % n; render(); }
+
+  document.getElementById('prev').addEventListener('click', () => go(index - 1));
+  document.getElementById('next').addEventListener('click', () => go(index + 1));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft') go(index - 1);
+    if (e.key === 'ArrowRight') go(index + 1);
+  });
+
+  let startX = 0, dragging = false;
+  const stage = document.querySelector('.stage');
+  function onStart(x) { startX = x; dragging = true; }
+  function onEnd(x) {
+    if (!dragging) return;
+    const dx = x - startX;
+    if (Math.abs(dx) > 45) go(index + (dx < 0 ? 1 : -1));
+    dragging = false;
+  }
+  stage.addEventListener('mousedown', e => { e.preventDefault(); onStart(e.clientX); });
+  window.addEventListener('mouseup', e => onEnd(e.clientX));
+  stage.addEventListener('touchstart', e => onStart(e.touches[0].clientX), { passive: true });
+  stage.addEventListener('touchend', e => onEnd(e.changedTouches[0].clientX));
+
+  let lock = false;
+  stage.addEventListener('wheel', e => {
+    e.preventDefault();
+    if (lock) return; lock = true;
+    go(index + (e.deltaY > 0 ? 1 : -1));
+    setTimeout(() => lock = false, 500);
+  }, { passive: false });
+
+  render();
+</script>
+</body>
+</html>

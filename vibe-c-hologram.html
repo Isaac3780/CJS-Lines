@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CJSLINES — Hologram</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f6f7f5;
+    --surface: #ffffff;
+    --ink: #101418;
+    --muted: #6b7280;
+    --line: #e4e7e4;
+    --accent: #0e7a5f;
+    --accent-soft: #e7f4ef;
+    --sheen: rgba(14,122,95,.10);
+    --card-w: 340px;
+    --card-h: 450px;
+    --radius: 460px;
+    --angle: 72deg;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: var(--bg); color: var(--ink); overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  .bg {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(50% 40% at 50% 0%, rgba(14,122,95,.07), transparent 65%),
+      linear-gradient(180deg, #fbfcfb, var(--bg));
+  }
+  .grid {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .5;
+    background-image: linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: radial-gradient(70% 60% at 50% 40%, #000, transparent 80%);
+    -webkit-mask-image: radial-gradient(70% 60% at 50% 40%, #000, transparent 80%);
+  }
+
+  .wrap { position: relative; z-index: 2; max-width: 1180px; margin: 0 auto; padding: 40px 28px 90px; }
+
+  header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+  .logo { display: flex; align-items: center; gap: 14px; }
+  .mark {
+    width: 44px; height: 44px; border-radius: 10px; display: grid; place-items: center;
+    font-family: 'Playfair Display'; font-weight: 600; font-size: 22px; color: #fff;
+    background: var(--ink);
+  }
+  .logo-text { font-weight: 600; letter-spacing: .24em; font-size: 15px; }
+  .logo-text small { display: block; font-weight: 500; letter-spacing: .3em; font-size: 9px; color: var(--muted); margin-top: 3px; }
+  .status { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+  .status i { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); margin-right: 8px; }
+
+  .hero { text-align: center; margin: 74px 0 6px; }
+  .eyebrow { font-size: 12px; letter-spacing: .42em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .hero h1 { font-family: 'Playfair Display'; font-weight: 500; font-size: clamp(40px, 7vw, 74px); line-height: 1.04; margin: 20px 0 16px; letter-spacing: -.01em; }
+  .hero h1 em { font-style: italic; color: var(--accent); }
+  .hero p { max-width: 560px; margin: 0 auto; color: var(--muted); font-size: 17px; line-height: 1.6; }
+  .hint { margin-top: 20px; font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--muted); }
+  .hint b { color: var(--ink); font-weight: 600; }
+
+  .stage { position: relative; height: 640px; margin-top: 10px; perspective: 1700px; }
+  .wheel { position: absolute; inset: 0; transform-style: preserve-3d; transition: transform .8s cubic-bezier(.22,.9,.28,1); }
+  .card {
+    position: absolute; top: 50%; left: 50%;
+    width: var(--card-w); height: var(--card-h);
+    margin: calc(var(--card-h) / -2) 0 0 calc(var(--card-w) / -2);
+    transform: rotateY(var(--a)) translateZ(var(--radius));
+    border-radius: 20px; padding: 30px; display: flex; flex-direction: column;
+    background: var(--surface); border: 1px solid var(--line);
+    box-shadow: 0 20px 50px rgba(16,20,24,.08);
+    backface-visibility: hidden; overflow: hidden; position: absolute;
+    transition: opacity .5s ease, filter .5s ease, box-shadow .4s ease;
+  }
+  .card .sheen {
+    position: absolute; top: 0; left: -80%; width: 60%; height: 100%;
+    background: linear-gradient(100deg, transparent, var(--sheen), transparent);
+    transform: skewX(-18deg); transition: left .8s ease; pointer-events: none;
+  }
+  .card.active .sheen { left: 140%; }
+  .card.active { box-shadow: 0 34px 80px rgba(16,20,24,.16); border-color: #cfe3db; }
+  .num { font-size: 12px; letter-spacing: .4em; color: var(--accent); font-weight: 600; }
+  .icon {
+    width: 66px; height: 66px; border-radius: 16px; margin: 26px 0; display: grid; place-items: center;
+    font-size: 30px; background: var(--accent-soft); color: var(--accent);
+  }
+  .card h3 { font-family: 'Playfair Display'; font-weight: 500; font-size: 25px; line-height: 1.15; margin-bottom: 8px; }
+  .tag { font-size: 10px; letter-spacing: .26em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 16px; }
+  .card p { font-size: 15px; line-height: 1.65; color: var(--muted); flex: 1; }
+  .meta { display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 20px; }
+  .chip { font-size: 11px; font-weight: 500; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+  .visit {
+    display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 14px 20px; border-radius: 12px; text-decoration: none;
+    font-weight: 600; font-size: 14px; color: #fff; background: var(--ink);
+    transition: background .25s ease, transform .25s ease;
+  }
+  .visit:hover { background: var(--accent); transform: translateY(-2px); }
+  .visit.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+
+  .controls { display: flex; align-items: center; justify-content: center; gap: 26px; margin-top: 26px; }
+  .nav-btn {
+    width: 56px; height: 56px; border-radius: 50%; cursor: pointer;
+    background: transparent; border: 1px solid var(--line); color: var(--ink); font-size: 18px;
+    display: grid; place-items: center; transition: all .25s ease;
+  }
+  .nav-btn:hover { background: var(--ink); color: #fff; border-color: var(--ink); }
+  .dots { display: flex; gap: 10px; }
+  .dots button { width: 9px; height: 9px; border-radius: 50%; border: none; cursor: pointer; background: #cfd6d1; transition: all .3s ease; }
+  .dots button.on { background: var(--accent); transform: scale(1.35); }
+  .counter { font-size: 13px; letter-spacing: .24em; color: var(--muted); font-weight: 500; min-width: 74px; text-align: center; }
+
+  footer { margin-top: 76px; text-align: center; color: var(--muted); font-size: 13px; letter-spacing: .1em; }
+  footer .line { height: 1px; width: 240px; margin: 0 auto 22px; background: var(--line); }
+
+  /* word + contact */
+  .word { margin-top: 74px; }
+  .word-inner {
+    position: relative; overflow: hidden; border-radius: 22px; padding: 46px 44px;
+    background: var(--surface); border: 1px solid var(--line); box-shadow: 0 20px 50px rgba(16,20,24,.08);
+  }
+  .word-inner .sheen {
+    position: absolute; top: 0; left: -80%; width: 60%; height: 100%;
+    background: linear-gradient(100deg, transparent, var(--sheen), transparent);
+    transform: skewX(-18deg); transition: left .9s ease; pointer-events: none;
+  }
+  .word:hover .word-inner .sheen { left: 140%; }
+  .word-eyebrow { font-size: 11px; letter-spacing: .42em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .word h2 { font-family: 'Playfair Display'; font-weight: 500; font-size: clamp(26px, 3.6vw, 36px); line-height: 1.15; margin: 16px 0 16px; }
+  .word p { color: var(--muted); font-size: 16px; line-height: 1.75; max-width: 620px; }
+  .word-btn {
+    display: inline-flex; align-items: center; gap: 10px; margin-top: 26px; padding: 15px 26px;
+    border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 14px; color: #fff;
+    background: var(--ink); transition: background .25s ease, transform .25s ease;
+  }
+  .word-btn:hover { background: var(--accent); transform: translateY(-2px); }
+  .word-badge { position: absolute; right: 34px; top: 50%; transform: translateY(-50%); font-family: 'Playfair Display'; font-size: 110px; color: var(--accent-soft); }
+
+  .contact { margin-top: 40px; }
+  .contact-inner {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 44px; border-radius: 22px;
+    background: var(--surface); border: 1px solid var(--line); box-shadow: 0 20px 50px rgba(16,20,24,.08);
+  }
+  .contact h2 { font-family: 'Playfair Display'; font-weight: 500; font-size: clamp(26px, 3.6vw, 36px); margin: 16px 0 12px; }
+  .contact-copy p { color: var(--muted); font-size: 15px; line-height: 1.7; }
+  .contact-links { display: flex; flex-direction: column; gap: 10px; margin-top: 22px; }
+  .contact-links a { color: var(--accent); text-decoration: none; font-weight: 500; font-size: 15px; }
+  .contact-form { display: flex; flex-direction: column; gap: 12px; }
+  .contact-form input, .contact-form textarea {
+    width: 100%; padding: 14px 16px; border-radius: 12px; font-size: 15px; font-family: inherit;
+    background: var(--bg); border: 1px solid var(--line); color: var(--ink); outline: none; transition: .25s;
+  }
+  .contact-form textarea { resize: vertical; min-height: 110px; }
+  .contact-form input::placeholder, .contact-form textarea::placeholder { color: #9aa39e; }
+  .contact-form input:focus, .contact-form textarea:focus { border-color: var(--accent); }
+  .contact-form button {
+    align-self: flex-start; padding: 15px 26px; border: none; border-radius: 12px; cursor: pointer;
+    font-weight: 600; font-size: 14px; color: #fff; background: var(--ink); transition: background .25s ease;
+  }
+  .contact-form button:hover { background: var(--accent); }
+
+  @media (max-width: 760px) {
+    :root { --card-w: 280px; --card-h: 430px; --radius: 360px; }
+    .word-inner, .contact-inner { padding: 30px 24px; }
+    .contact-inner { grid-template-columns: 1fr; }
+    .word-badge { display: none; }
+    .stage { height: 580px; }
+    .hero { margin-top: 44px; }
+    .status { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="grid"></div>
+
+  <div class="wrap">
+    <header>
+      <div class="logo">
+        <div class="mark">C</div>
+        <div class="logo-text">CJSLINES<small>DIGITAL GROUP</small></div>
+      </div>
+      <div class="status"><i></i> All systems online</div>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">A group of five ventures</div>
+      <h1>The <em>CJSLINES</em> Network</h1>
+      <p>Five services, one group. Rotate the wheel to preview each venture — then step through to visit it.</p>
+      <div class="hint"><b>Drag</b> or <b>Scroll</b> to rotate · Click a card to visit</div>
+    </section>
+
+    <div class="stage">
+      <div class="wheel" id="wheel"></div>
+    </div>
+
+    <div class="controls">
+      <button class="nav-btn" id="prev" aria-label="Previous">&#10094;</button>
+      <div class="dots" id="dots"></div>
+      <div class="counter" id="counter">01 / 05</div>
+      <button class="nav-btn" id="next" aria-label="Next">&#10095;</button>
+    </div>
+
+    <section class="word" id="word">
+      <div class="word-inner">
+        <div class="sheen"></div>
+        <div class="word-eyebrow">A Word To Ponder</div>
+        <h2>Brethren, Are We Truly Living Out Our Calling?</h2>
+        <p>A reflective call to examine whether our faith has become routine. We fill services and buildings, yet the lost outside remain unreached. God's heart is for the lost — like the shepherd who leaves the ninety-nine for the one. We are saved to serve, loved to love, and called to make disciples, not just attendees. May we step beyond the four walls to reach the hurting, forgotten, and lost.</p>
+        <a class="word-btn" href="message.html?vibe=c">Read the Full Message →</a>
+        <div class="word-badge">✝</div>
+      </div>
+    </section>
+
+    <section class="contact" id="contact">
+      <div class="contact-inner">
+        <div class="contact-copy">
+          <div class="word-eyebrow">Get In Touch</div>
+          <h2>Contact Us</h2>
+          <p>Questions, prayer requests, or a partnership idea — we'd love to hear from you.</p>
+          <div class="contact-links">
+            <a href="mailto:hello@cjslines.com">hello@cjslines.com</a>
+            <a href="https://wa.me/6582683372">WhatsApp · +65 8268 3372</a>
+          </div>
+        </div>
+        <form class="contact-form" action="mailto:hello@cjslines.com" method="post" enctype="text/plain">
+          <input type="text" name="name" placeholder="Your name" required />
+          <input type="email" name="email" placeholder="Your email" required />
+          <textarea name="message" placeholder="How can we help?" required></textarea>
+          <button type="submit">Send Message →</button>
+        </form>
+      </div>
+    </section>
+
+    <footer>
+      <div class="line"></div>
+      CJSLINES · Logistics · Infrastructure · Education · Charity
+    </footer>
+  </div>
+
+<script>
+  const data = [
+    { icon: '🚚', title: 'Logistics & Transport', tag: 'Forwarding · Local Transport',
+      desc: 'Parcel forwarding and local transport solutions. Move goods across borders and around the city with reliable, trackable service.',
+      chips: ['Parcel Forwarding', 'Local Delivery', 'Cross-border'], url: '#' },
+    { icon: '🌐', title: 'Web Infrastructure & Hosting', tag: 'Domains · Hosting · Web Setup',
+      desc: 'Domain registration, business web hosting and complete new-website setup packages — from name to live site.',
+      chips: ['Domains', 'Hosting', 'Website Setup'], url: 'https://oryon.net/' },
+    { icon: '🎓', title: 'Academy & Café Traineeship', tag: 'Livelihood School · Internship',
+      desc: 'A livelihood school and training café. Trainees run a real café while studying English, maths and entrepreneurship — earn while you learn.',
+      chips: ['Traineeship', 'Café Ops', 'Livelihood'], url: 'https://isaac3780.github.io/Ministry-Cafe/index.html' },
+    { icon: '❤️', title: 'Charity Marketplace', tag: 'Secondhand · For a Cause',
+      desc: 'Secondhand online selling where proceeds support charitable work. Every purchase helps fund outreach and community missions.',
+      chips: ['Secondhand', 'Fundraising', 'Community'], url: 'https://isaac3780.github.io/echofromabove/charity-site/index.html' },
+    { icon: '✦', title: 'Explore More', tag: 'Others · Coming Soon',
+      desc: 'More ventures are on the way. Check back soon, or reach out to see how CJSLINES can work with you.',
+      chips: ['Coming Soon', 'Partnerships'], url: '#' }
+  ];
+
+  const wheel = document.getElementById('wheel');
+  const dots = document.getElementById('dots');
+  const counter = document.getElementById('counter');
+  const n = data.length;
+  const angle = 360 / n;
+  let index = 0;
+
+  data.forEach((d, i) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.style.setProperty('--a', (i * angle) + 'deg');
+    card.innerHTML = `
+      <div class="sheen"></div>
+      <div class="num">0${i + 1} / 0${n}</div>
+      <div class="icon">${d.icon}</div>
+      <h3>${d.title}</h3>
+      <div class="tag">${d.tag}</div>
+      <p>${d.desc}</p>
+      <div class="meta">${d.chips.map(c => `<span class="chip">${c}</span>`).join('')}</div>
+      <a class="visit ${d.url === '#' ? 'ghost' : ''}" href="${d.url}" target="_blank" rel="noopener">${d.url === '#' ? 'Coming Soon' : 'Visit Site →'}</a>
+    `;
+    wheel.appendChild(card);
+    const dot = document.createElement('button');
+    dot.setAttribute('aria-label', 'Go to ' + d.title);
+    dot.addEventListener('click', () => go(i));
+    dots.appendChild(dot);
+  });
+
+  const cards = [...wheel.children];
+  const dotBtns = [...dots.children];
+
+  function render() {
+    const radius = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--radius')) || 460;
+    wheel.style.transform = `translateZ(-${radius}px) rotateY(${-index * angle}deg)`;
+    cards.forEach((c, i) => {
+      let a = (i - index) * angle;
+      a = ((a % 360) + 360) % 360;
+      if (a > 180) a -= 360;
+      const abs = Math.abs(a);
+      const opacity = Math.max(0.12, 1 - abs / 150);
+      const blur = abs > 90 ? Math.min(3, (abs - 90) / 30) : 0;
+      const active = abs < 36;
+      c.classList.toggle('active', active);
+      c.style.opacity = active ? 1 : opacity;
+      c.style.filter = blur ? `blur(${blur}px)` : 'none';
+      c.style.pointerEvents = active ? 'auto' : 'none';
+    });
+    dotBtns.forEach((d, i) => d.classList.toggle('on', i === index));
+    counter.textContent = `0${index + 1} / 0${n}`;
+  }
+
+  function go(i) { index = (i + n) % n; render(); }
+
+  document.getElementById('prev').addEventListener('click', () => go(index - 1));
+  document.getElementById('next').addEventListener('click', () => go(index + 1));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowLeft') go(index - 1);
+    if (e.key === 'ArrowRight') go(index + 1);
+  });
+
+  let startX = 0, dragging = false;
+  const stage = document.querySelector('.stage');
+  function onStart(x) { startX = x; dragging = true; }
+  function onEnd(x) {
+    if (!dragging) return;
+    const dx = x - startX;
+    if (Math.abs(dx) > 45) go(index + (dx < 0 ? 1 : -1));
+    dragging = false;
+  }
+  stage.addEventListener('mousedown', e => { e.preventDefault(); onStart(e.clientX); });
+  window.addEventListener('mouseup', e => onEnd(e.clientX));
+  stage.addEventListener('touchstart', e => onStart(e.touches[0].clientX), { passive: true });
+  stage.addEventListener('touchend', e => onEnd(e.changedTouches[0].clientX));
+
+  let lock = false;
+  stage.addEventListener('wheel', e => {
+    e.preventDefault();
+    if (lock) return; lock = true;
+    go(index + (e.deltaY > 0 ? 1 : -1));
+    setTimeout(() => lock = false, 500);
+  }, { passive: false });
+
+  render();
+</script>
+</body>
+</html>
